@@ -15,7 +15,18 @@ class Node
 end
 
 def setup
-  data = File.open("data.txt").readlines.map { |line| line.chomp.split("").map &:to_i  }
+  data = File.open("sample.txt").readlines
+    .map { |line| line.chomp.split("").map &:to_i }
+  output = data.map { |line| line + Array.new(line.length * 5) }
+  output += Array.new(data.length * 4, Array.new(data[0].length * 5))
+  data.each.with_index do |line, row|
+    line.each.with_index do |num, col|
+      5.times.with_index do |i|
+        output[row][(data[0].length * i) + col] = (num + i) % 9
+      end 
+    end
+  end
+  output
 end
 
 def gimme graph, visited
@@ -73,4 +84,9 @@ def dijkstra(current, dest, graph)
   end
 end
 
-p dijkstra(current, dest, graph)
+graph.each do |line|
+  line.each do |node|
+    print node.weight
+  end
+  puts
+end
