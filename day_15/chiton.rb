@@ -1,7 +1,8 @@
 require 'pry'
 
 class Node
-  attr_reader :visited, :distance, :x, :y, :weight
+  attr_reader :visited, :x, :y, :weight
+  attr_accessor :f_score, :distance
   
   def initialize weight, x, y
     @visited = false
@@ -9,6 +10,7 @@ class Node
     @weight = weight
     @x = x
     @y = y
+    @f_score = nil
   end
 
   def setDistance(distance) 
@@ -37,29 +39,36 @@ current = graph[0][0]
 current.setDistance(0)
 dest = graph[-1][-1]
 
-def dijkstra(current, dest, graph)
-  visited = []
-  unvisited = []
+def heuristic node, graph
+  (graph[0].length - node.x) * 5 + 5 * (graph.length - node.y)
+end
+
+def a_star(current, dest, graph)
+  openSet = []
+  current.f_score = heuristic current, graph
   while true
     (-1..1).each do |y|
       (-1..1).each do |x|
         next if x == y || (!x.zero? && !y.zero?)
         next if current.x + x < 0 || current.y + y < 0
         next if [current.x + x, current.y + y].include? graph.length
-        next if visited.include? graph[current.y + y][current.x + x]
 
-        graph[current.y + y][current.x + x].setDistance([graph[current.y + y][current.x + x].distance, current.distance + graph[current.y + y][current.x + x].weight].min)
-        unvisited << graph[current.y + y][current.x + x]
+        considering = graph[current.y + y][current.x + x]
+        tentative_dist = current.distance + considering.weight
+        if tentative_dist < considering.distance
+          graph[current.y + y][current.x + x].distance = tentative_dist
+          graph[current.y + y][current.x + x].f_score = tentative_dist + heuristic(graph[current.y + y][current.x + x], graph)
+          openSet << considering unless openSet.include? considering
+        end
       end
     end
 
-    visited << current
-    unvisited.delete(current)
-    current = unvisited.sort { |a, b| a.distance <=> b.distance }[0]
+    openSet.delete(current)
+    current = openSet.min { |a, b| a.distance <=> b.distance }
     if current == dest
       return current
     end
   end
 end
 
-p dijkstra(current, dest, graph)
+p a_star(current, dest, graph)
