@@ -1,3 +1,5 @@
+require 'pry'
+
 class Node
   attr_reader :visited, :distance, :x, :y, :weight
   
@@ -15,27 +17,19 @@ class Node
 end
 
 def setup
-  data = File.open("sample.txt").readlines
+  data = File.open("data.txt").readlines
     .map { |line| line.chomp.split("").map &:to_i }
-  output = data.map { |line| line + Array.new(line.length * 5) }
-  output += Array.new(data.length * 4, Array.new(data[0].length * 5))
-  data.each.with_index do |line, row|
-    line.each.with_index do |num, col|
-      5.times.with_index do |i|
-        output[row][(data[0].length * i) + col] = (num + i) % 9
-      end 
+  output = data.map { |line| line + Array.new(line.length * 4) }
+  output += Array.new(data.length * 4) { Array.new { (data[0].length * 4) - 1 } }
+  output.each.with_index do |line, row|
+    output.each.with_index do |num, col|
+      output[row][col] = data[row % data.length][col % data[0].length]
+      output[row][col] += (row / data.length) + (col / data[0].length)
+      output[row][col] %= 9
+      output[row][col] += 9 if output[row][col] == 0
     end
   end
   output
-end
-
-def gimme graph, visited
-  graph.each do |line|
-    line.each do |node|
-      print(visited.include?(node) ? "  , " : "#{node.distance}, ") 
-    end
-    puts
-  end
 end
 
 graph = setup.map.with_index { |arr, y| arr.map.with_index { |weight, x| Node.new(weight, x, y) } }
@@ -43,36 +37,20 @@ current = graph[0][0]
 current.setDistance(0)
 dest = graph[-1][-1]
 
-def find_nearest graph, visited, dest
-  nearest = dest
-  graph.each do |line|
-    line.each do |node|
-      unless visited.include? node
-        nearest = (node.distance < nearest.distance ? node : nearest)
-      end
-    end
-  end
-  nearest
-end
-
 def dijkstra(current, dest, graph)
   visited = []
-  unvisited = graph.flatten
+  unvisited = []
   while true
-    unless current.y - 1 < 0 || visited.include?(graph[current.y - 1][current.x])
-      graph[current.y - 1][current.x].setDistance([graph[current.y - 1][current.x].distance, current.distance + graph[current.y - 1][current.x].weight].min)
-    end
-    
-    unless current.x - 1 < 0 || visited.include?(graph[current.y][current.x - 1])
-      graph[current.y][current.x - 1].setDistance([graph[current.y][current.x - 1].distance, current.distance + graph[current.y][current.x - 1].weight].min)
-    end
+    (-1..1).each do |y|
+      (-1..1).each do |x|
+        next if x == y || (!x.zero? && !y.zero?)
+        next if current.x + x < 0 || current.y + y < 0
+        next if [current.x + x, current.y + y].include? graph.length
+        next if visited.include? graph[current.y + y][current.x + x]
 
-    unless current.x + 1 >= graph[0].length || visited.include?(graph[current.y][current.x + 1])
-      graph[current.y][current.x + 1].setDistance([graph[current.y][current.x + 1].distance, current.distance + graph[current.y][current.x + 1].weight].min)
-    end
-
-    unless current.y + 1 >= graph.length || visited.include?(graph[current.y + 1][current.x])
-      graph[current.y + 1][current.x].setDistance([graph[current.y + 1][current.x].distance, current.distance + graph[current.y + 1][current.x].weight].min)
+        graph[current.y + y][current.x + x].setDistance([graph[current.y + y][current.x + x].distance, current.distance + graph[current.y + y][current.x + x].weight].min)
+        unvisited << graph[current.y + y][current.x + x]
+      end
     end
 
     visited << current
@@ -84,9 +62,4 @@ def dijkstra(current, dest, graph)
   end
 end
 
-graph.each do |line|
-  line.each do |node|
-    print node.weight
-  end
-  puts
-end
+p dijkstra(current, dest, graph)
