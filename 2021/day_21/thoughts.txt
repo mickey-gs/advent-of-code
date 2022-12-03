@@ -1,0 +1,13 @@
+Okay, obviously simulating all of those games of Dirac dice is completely insane and would never terminate.
+I think the answer is going to just be calculating possible games. That is, given an initial starting position and a target score, how many different games can possibly fit into that score amount? And of those possible games, which win for player 1 and which for player 2?
+A complicating factor is the actual calculation of score. A dice roll does not directly correspond to score; the score after each roll is a function of the dice roll and the player's position. Still, as the score total is quite low (21), this hopefully shouldn't make things too messy.
+Another thing! It would be easiest to calculate all the distinct permutations that add up to 21 points, and then see which ones contain the starting points of each player.
+Or maybe how many games win after x turns for each player? Identical rolls for each player in each 'game' could be used for this. 
+The longest a game can possibly last is 6 turns, consisting of each player starting at square 1 and rolling a 1 every turn.
+The shortest a game can possibly last is 3 turns, consisting of each player starting at square 7 and rolling a 1 every turn.
+Optimisations:
+- Check if a game is completed after optimal rolls. If not, move on to the next game length.
+- If a player wins with a set of particular dice rolls, they must necessarily also win with that set of rolls for every possible game that their opponent makes worse rolls.
+- Caching: all 4-turn games are a 3 turn game with 1 extra move, etc.
+- Only need to record how many times a score occurs (with final position) for a certain game length, not the individual rolls
+- If a game hasn't gone over 10 within x rolls, it is congruent to all other permutations of games with those rolls
